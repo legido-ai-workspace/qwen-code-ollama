@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  qwen-code-ollama:
+    build: .
+    container_name: qwen-code-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data:/home/node/.qwen
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - OLLAMA_HOST=http://localhost:11434
+    privileged: true
+    tty: true
+    stdin_open: true
+    depends_on:
+      - ollama
+      
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

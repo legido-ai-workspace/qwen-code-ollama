@@ -397,6 +397,13 @@ If you encounter issues, check the [troubleshooting guide](docs/troubleshooting.
 
 This project is based on [Google Gemini CLI](https://github.com/google-gemini/gemini-cli). We acknowledge and appreciate the excellent work of the Gemini CLI team. Our main contribution focuses on parser-level adaptations to better support Qwen-Coder models.
 
+
+## Docker Setup
+
+
+
+For Docker-based deployment with Ollama support, see [README_DOCKER.md](README_DOCKER.md).
+
 ## License
 
 [LICENSE](./LICENSE)
