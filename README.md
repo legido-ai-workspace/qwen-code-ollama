@@ -116,7 +116,9 @@ qwen
 
 #### Quick Start with Docker
 
-You can also run Qwen Code in a Docker container from GitHub Container Registry:
+You can run Qwen Code using Docker in two ways:
+
+##### Option 1: Pull from GitHub Container Registry (Recommended)
 
 1. **Pull the Docker image from GitHub Container Registry:**
 ```bash
@@ -150,22 +152,30 @@ docker run -it --rm -e OPENAI_API_KEY=your_api_key -e OPENAI_BASE_URL=your_api_e
 docker run -it --rm -v /path/to/your/project:/workspace ghcr.io/legido-ai-workspace/qwen-code-ollama:latest qwen
 ```
 
-> **Note for Docker setup:** When using Ollama with Docker, you'll typically need `--network host` to allow the container to access the Ollama service running on your host machine. Alternatively, you can use `--add-host host.docker.internal:host-gateway` on some Docker versions.
-
-### Building the Docker Image Locally
+##### Option 2: Build the Docker Image Locally
 
 If you prefer to build the image locally:
 
-1. **Build the Docker image:**
+1. **Clone the repository and build the Docker image:**
 ```bash
+git clone https://github.com/legido-ai-workspace/qwen-code-ollama.git
+cd qwen-code-ollama
 docker build -t qwen-code-ollama .
 ```
 
-2. **Tag and push to your registry if needed:**
+2. **Run using the locally built image:**
 ```bash
-docker tag qwen-code-ollama ghcr.io/legido-ai-workspace/qwen-code-ollama:latest
-docker push ghcr.io/legido-ai-workspace/qwen-code-ollama:latest
+docker run -it --rm qwen-code-ollama qwen
 ```
+
+> **Note for Docker setup:** When using Ollama with Docker, you'll typically need `--network host` to allow the container to access the Ollama service running on your host machine. Alternatively, you can use `--add-host host.docker.internal:host-gateway` on some Docker versions.
+
+### Docker Image Tags
+
+The Docker image is published with multiple tags:
+- `latest` - Most recent build from main branch
+- `main` - Build from main branch
+- `vX.X.X` - Versioned releases (e.g., `v0.0.12`)
 
 ### Session Management
 
