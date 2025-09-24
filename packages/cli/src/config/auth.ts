@@ -40,10 +40,18 @@ export const validateAuthMethod = (authMethod: string): string | null => {
   }
 
   if (authMethod === AuthType.USE_OPENAI) {
-    if (!process.env['OPENAI_API_KEY']) {
-      return 'OPENAI_API_KEY environment variable not found. You can enter it interactively or add it to your .env file.';
+    // Accept either:
+    // - Standard OpenAI API key flow (OPENAI_API_KEY)
+    // - Custom OpenAI-compatible base URL (OPENAI_BASE_URL)
+    // - Ollama host (OLLAMA_HOST) which is OpenAI-compatible and requires no key
+    const hasOpenAiKey = !!process.env['OPENAI_API_KEY'];
+    const hasOpenAiBaseUrl = !!process.env['OPENAI_BASE_URL'];
+    const hasOllamaHost = !!process.env['OLLAMA_HOST'];
+
+    if (hasOpenAiKey || hasOpenAiBaseUrl || hasOllamaHost) {
+      return null;
     }
-    return null;
+    return 'Missing OpenAI configuration. Provide one of: OPENAI_API_KEY, OPENAI_BASE_URL, or OLLAMA_HOST.';
   }
 
   if (authMethod === AuthType.QWEN_OAUTH) {

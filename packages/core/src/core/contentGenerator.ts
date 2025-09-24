@@ -90,10 +90,10 @@ export function createContentGeneratorConfig(
   const openaiApiKey = process.env['OPENAI_API_KEY'] || undefined;
   const openaiBaseUrl = process.env['OPENAI_BASE_URL'] || undefined;
   const openaiModel = process.env['OPENAI_MODEL'] || undefined;
-  
-  // Ollama configuration
+
+  // Ollama (OpenAI-compatible local server)
   const ollamaHost = process.env['OLLAMA_HOST'] || undefined;
-  const ollamaModel = process.env['OLLAMA_MODEL'] || undefined;
+  const ollamaMode = process.env['OLLAMA_MODE'] || undefined;
 
   // Use runtime model from config if available; otherwise, fall back to parameter or default
   const effectiveModel = config.getModel() || DEFAULT_GEMINI_MODEL;
@@ -133,23 +133,25 @@ export function createContentGeneratorConfig(
 
     return contentGeneratorConfig;
   }
-  
-  // Handle Ollama configuration
-  if (ollamaHost || ollamaModel) {
-    contentGeneratorConfig.apiKey = 'ollama'; // Ollama doesn't require an API key
-    contentGeneratorConfig.baseUrl = ollamaHost || 'http://localhost:11434/v1';
-    contentGeneratorConfig.model = ollamaModel || DEFAULT_QWEN_MODEL;
-    contentGeneratorConfig.authType = AuthType.USE_OPENAI; // Use OpenAI provider for Ollama
 
-    return contentGeneratorConfig;
-  }
+  if (authType === AuthType.USE_OPENAI) {
+    // Prefer explicit OpenAI settings when provided
+    if (openaiApiKey || openaiBaseUrl || openaiModel) {
+      contentGeneratorConfig.apiKey = openaiApiKey;
+      contentGeneratorConfig.baseUrl = openaiBaseUrl;
+      contentGeneratorConfig.model = openaiModel || DEFAULT_QWEN_MODEL;
+      return contentGeneratorConfig;
+    }
 
-  if (authType === AuthType.USE_OPENAI && openaiApiKey) {
-    contentGeneratorConfig.apiKey = openaiApiKey;
-    contentGeneratorConfig.baseUrl = openaiBaseUrl;
-    contentGeneratorConfig.model = openaiModel || DEFAULT_QWEN_MODEL;
-
-    return contentGeneratorConfig;
+    // Fallback to Ollama env if present (no API key required)
+    if (ollamaHost) {
+      contentGeneratorConfig.apiKey = process.env['OPENAI_API_KEY'] || 'ollama';
+      // Normalize Ollama host to include /v1 for OpenAI-compatible APIs
+      const trimmed = ollamaHost.replace(/\/$/, '');
+      contentGeneratorConfig.baseUrl = `${trimmed}/v1`;
+      contentGeneratorConfig.model = ollamaMode || DEFAULT_QWEN_MODEL;
+      return contentGeneratorConfig;
+    }
   }
 
   if (authType === AuthType.QWEN_OAUTH) {
@@ -218,8 +220,10 @@ export async function createContentGenerator(
   }
 
   if (config.authType === AuthType.USE_OPENAI) {
-    if (!config.apiKey) {
-      throw new Error('OpenAI API key is required');
+    // Allow missing API key when targeting a local OpenAI-compatible server like Ollama
+    // As long as a baseUrl is provided, we proceed with a placeholder key.
+    if (!config.apiKey && !config.baseUrl) {
+      throw new Error('OpenAI configuration requires an API key or a base URL');
     }
 
     // Import OpenAIContentGenerator dynamically to avoid circular dependencies
@@ -228,7 +232,13 @@ export async function createContentGenerator(
     );
 
     // Always use OpenAIContentGenerator, logging is controlled by enableOpenAILogging flag
-    return createOpenAIContentGenerator(config, gcConfig);
+    return createOpenAIContentGenerator(
+      {
+        ...config,
+        apiKey: config.apiKey || 'ollama',
+      },
+      gcConfig,
+    );
   }
 
   if (config.authType === AuthType.QWEN_OAUTH) {

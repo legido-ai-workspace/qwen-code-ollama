@@ -99,6 +99,66 @@ qwen
 > Generate unit tests for this module
 ```
 
+#### Quick Start with Ollama (Local)
+
+```bash
+# Ensure Ollama is running and a model is available
+ollama serve &            # if not already running
+ollama pull qwen2.5-coder
+
+# Configure Qwen Code to use Ollama
+export OLLAMA_HOST="http://localhost:11434"
+export OLLAMA_MODE="qwen2.5-coder"
+
+# Launch Qwen Code
+qwen
+```
+
+#### Quick Start with Docker
+
+Run Qwen Code using Docker by pulling the image from GitHub Container Registry:
+
+1. **Pull the Docker image from GitHub Container Registry:**
+```bash
+docker pull ghcr.io/legido-ai-workspace/qwen-code-ollama:latest
+```
+
+2. **Run with direct API access:**
+```bash
+docker run -it --rm ghcr.io/legido-ai-workspace/qwen-code-ollama:latest qwen
+```
+
+3. **Run with Ollama support (accessing Ollama running on host):**
+```bash
+# First ensure Ollama is running on the host:
+ollama serve &
+
+# Pull a model:
+ollama pull qwen2.5-coder
+
+# Run the container with host network access to connect to Ollama:
+docker run -it --rm --network host ghcr.io/legido-ai-workspace/qwen-code-ollama:latest qwen --ollama-host http://localhost:11434
+```
+
+4. **Run with environment variables:**
+```bash
+docker run -it --rm -e OPENAI_API_KEY=your_api_key -e OPENAI_BASE_URL=your_api_endpoint ghcr.io/legido-ai-workspace/qwen-code-ollama:latest qwen
+```
+
+5. **Mount a project directory:**
+```bash
+docker run -it --rm -v /path/to/your/project:/workspace ghcr.io/legido-ai-workspace/qwen-code-ollama:latest qwen
+```
+
+> **Note for Docker setup:** When using Ollama with Docker, you'll typically need `--network host` to allow the container to access the Ollama service running on your host machine. Alternatively, you can use `--add-host host.docker.internal:host-gateway` on some Docker versions.
+
+### Docker Image Tags
+
+The Docker image is published with multiple tags:
+- `latest` - Most recent build from main branch
+- `main` - Build from main branch
+- `vX.X.X` - Versioned releases (e.g., `v0.0.12`)
+
 ### Session Management
 
 Control your token usage with configurable session limits to optimize costs and performance.
@@ -171,45 +231,6 @@ Use API keys for OpenAI or other compatible providers:
    OPENAI_MODEL=your_model_choice
    ```
 
-### 3. Ollama (Local Models)
-
-Run Qwen Code with locally hosted models using Ollama:
-
-**Prerequisites:**
-- [Ollama](https://ollama.com/) installed and running
-- Qwen3-Coder model pulled (e.g., `ollama pull qwen3-coder`)
-
-**Configuration Methods:**
-
-1. **Environment Variables**
-
-   ```bash
-   export OLLAMA_HOST="http://localhost:11434/v1"
-   export OLLAMA_MODEL="qwen3-coder"
-   ```
-
-2. **Project `.env` File**
-   Create a `.env` file in your project root:
-   ```env
-   OLLAMA_HOST=http://localhost:11434/v1
-   OLLAMA_MODEL=qwen3-coder
-   ```
-
-**Example Commands:**
-
-```bash
-# Start Ollama service (if not already running)
-ollama serve
-
-# Pull the Qwen3-Coder model
-ollama pull qwen3-coder
-
-# Run Qwen Code with Ollama
-export OLLAMA_HOST="http://localhost:11434/v1"
-export OLLAMA_MODEL="qwen3-coder"
-qwen
-```
-
 **API Provider Options**
 
 > ⚠️ **Regional Notice:**
@@ -261,6 +282,53 @@ export OPENAI_MODEL="qwen/qwen3-coder:free"
 ```
 
 </details>
+
+### 🖥️ Use Ollama (Local, OpenAI-compatible)
+
+Qwen Code supports local Ollama servers via the OpenAI-compatible API surface. No API key is required.
+
+- Ollama install guide: `https://ollama.com/`
+- Pull a model (example):
+  ```bash
+  ollama pull qwen2.5-coder
+  # or: ollama pull qwen2.5-coder:14b
+  ```
+
+You can configure Ollama in either of two ways:
+
+1) Using dedicated Ollama environment variables (recommended)
+```bash
+# Point to your local Ollama server (default port 11434)
+export OLLAMA_HOST="http://localhost:11434"
+# Choose the model to use from `ollama list`
+export OLLAMA_MODE="qwen2.5-coder"
+
+# Run Qwen Code
+qwen
+```
+
+2) Using OpenAI-compatible variables
+```bash
+# OpenAI-compatible base URL (note the /v1 suffix)
+export OPENAI_BASE_URL="http://localhost:11434/v1"
+# OpenAI-compatible model name (e.g., one shown by `ollama list`)
+export OPENAI_MODEL="qwen2.5-coder"
+# API key is not required by Ollama; a placeholder is fine
+export OPENAI_API_KEY="ollama"
+
+# Run Qwen Code
+qwen
+```
+
+CLI flags alternative (no env vars):
+```bash
+qwen --openai-base-url http://localhost:11434/v1 -m qwen2.5-coder
+```
+
+Notes:
+- No real API key is required for Ollama.
+- If `OLLAMA_HOST` is set, Qwen Code will auto-select OpenAI-compatible mode.
+- Some Ollama models have limited tool/function-calling support; Qwen Code automatically adapts when targeting Ollama.
 
 ## Usage Examples
 
@@ -393,16 +461,11 @@ For detailed authentication setup, see the [authentication guide](./docs/cli/aut
 
 If you encounter issues, check the [troubleshooting guide](docs/troubleshooting.md).
 
+- Ollama requests failing with 401/403: ensure you’re using `OLLAMA_HOST` or `OPENAI_BASE_URL` pointing to `http://localhost:11434/v1`. No real API key is required; if needed, set `OPENAI_API_KEY=ollama`.
+
 ## Acknowledgments
 
 This project is based on [Google Gemini CLI](https://github.com/google-gemini/gemini-cli). We acknowledge and appreciate the excellent work of the Gemini CLI team. Our main contribution focuses on parser-level adaptations to better support Qwen-Coder models.
-
-
-## Docker Setup
-
-
-
-For Docker-based deployment with Ollama support, see [README_DOCKER.md](README_DOCKER.md).
 
 ## License
 

@@ -15,7 +15,6 @@ import {
   OpenRouterOpenAICompatibleProvider,
   type OpenAICompatibleProvider,
   DefaultOpenAICompatibleProvider,
-  OllamaOpenAICompatibleProvider,
 } from './provider/index.js';
 
 export { OpenAIContentGenerator } from './openaiContentGenerator.js';
@@ -25,7 +24,6 @@ export {
   type OpenAICompatibleProvider,
   DashScopeOpenAICompatibleProvider,
   OpenRouterOpenAICompatibleProvider,
-  OllamaOpenAICompatibleProvider,
 } from './provider/index.js';
 
 export { OpenAIContentConverter } from './converter.js';
@@ -54,14 +52,6 @@ export function determineProvider(
 ): OpenAICompatibleProvider {
   const config =
     contentGeneratorConfig || cliConfig.getContentGeneratorConfig();
-
-  // Check for Ollama provider
-  if (OllamaOpenAICompatibleProvider.isOllamaProvider(config)) {
-    return new OllamaOpenAICompatibleProvider(
-      contentGeneratorConfig,
-      cliConfig,
-    );
-  }
 
   // Check for DashScope provider
   if (DashScopeOpenAICompatibleProvider.isDashScopeProvider(config)) {
