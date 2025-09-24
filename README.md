@@ -114,6 +114,44 @@ export OLLAMA_MODE="qwen2.5-coder"
 qwen
 ```
 
+#### Quick Start with Docker
+
+You can also run Qwen Code in a Docker container:
+
+1. **Build the Docker image:**
+```bash
+docker build -t qwen-code .
+```
+
+2. **Run with direct API access:**
+```bash
+docker run -it --rm qwen-code qwen
+```
+
+3. **Run with Ollama support (accessing Ollama running on host):**
+```bash
+# First ensure Ollama is running on the host:
+ollama serve &
+
+# Pull a model:
+ollama pull qwen2.5-coder
+
+# Run the container with host network access to connect to Ollama:
+docker run -it --rm --network host qwen-code qwen --ollama-host http://localhost:11434
+```
+
+4. **Run with environment variables:**
+```bash
+docker run -it --rm -e OPENAI_API_KEY=your_api_key -e OPENAI_BASE_URL=your_api_endpoint qwen-code qwen
+```
+
+5. **Mount a project directory:**
+```bash
+docker run -it --rm -v /path/to/your/project:/workspace qwen-code qwen
+```
+
+> **Note for Docker setup:** When using Ollama with Docker, you'll typically need `--network host` to allow the container to access the Ollama service running on your host machine. Alternatively, you can use `--add-host host.docker.internal:host-gateway` on some Docker versions.
+
 ### Session Management
 
 Control your token usage with configurable session limits to optimize costs and performance.
