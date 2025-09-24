@@ -99,6 +99,21 @@ qwen
 > Generate unit tests for this module
 ```
 
+#### Quick Start with Ollama (Local)
+
+```bash
+# Ensure Ollama is running and a model is available
+ollama serve &            # if not already running
+ollama pull qwen2.5-coder
+
+# Configure Qwen Code to use Ollama
+export OLLAMA_HOST="http://localhost:11434"
+export OLLAMA_MODE="qwen2.5-coder"
+
+# Launch Qwen Code
+qwen
+```
+
 ### Session Management
 
 Control your token usage with configurable session limits to optimize costs and performance.
@@ -222,6 +237,53 @@ export OPENAI_MODEL="qwen/qwen3-coder:free"
 ```
 
 </details>
+
+### 🖥️ Use Ollama (Local, OpenAI-compatible)
+
+Qwen Code supports local Ollama servers via the OpenAI-compatible API surface. No API key is required.
+
+- Ollama install guide: `https://ollama.com/`
+- Pull a model (example):
+  ```bash
+  ollama pull qwen2.5-coder
+  # or: ollama pull qwen2.5-coder:14b
+  ```
+
+You can configure Ollama in either of two ways:
+
+1) Using dedicated Ollama environment variables (recommended)
+```bash
+# Point to your local Ollama server (default port 11434)
+export OLLAMA_HOST="http://localhost:11434"
+# Choose the model to use from `ollama list`
+export OLLAMA_MODE="qwen2.5-coder"
+
+# Run Qwen Code
+qwen
+```
+
+2) Using OpenAI-compatible variables
+```bash
+# OpenAI-compatible base URL (note the /v1 suffix)
+export OPENAI_BASE_URL="http://localhost:11434/v1"
+# OpenAI-compatible model name (e.g., one shown by `ollama list`)
+export OPENAI_MODEL="qwen2.5-coder"
+# API key is not required by Ollama; a placeholder is fine
+export OPENAI_API_KEY="ollama"
+
+# Run Qwen Code
+qwen
+```
+
+CLI flags alternative (no env vars):
+```bash
+qwen --openai-base-url http://localhost:11434/v1 -m qwen2.5-coder
+```
+
+Notes:
+- No real API key is required for Ollama.
+- If `OLLAMA_HOST` is set, Qwen Code will auto-select OpenAI-compatible mode.
+- Some Ollama models have limited tool/function-calling support; Qwen Code automatically adapts when targeting Ollama.
 
 ## Usage Examples
 
@@ -353,6 +415,8 @@ For detailed authentication setup, see the [authentication guide](./docs/cli/aut
 ## Troubleshooting
 
 If you encounter issues, check the [troubleshooting guide](docs/troubleshooting.md).
+
+- Ollama requests failing with 401/403: ensure you’re using `OLLAMA_HOST` or `OPENAI_BASE_URL` pointing to `http://localhost:11434/v1`. No real API key is required; if needed, set `OPENAI_API_KEY=ollama`.
 
 ## Acknowledgments
 

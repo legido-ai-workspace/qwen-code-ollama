@@ -38,7 +38,8 @@ export class DefaultOpenAICompatibleProvider
     } = this.contentGeneratorConfig;
     const defaultHeaders = this.buildHeaders();
     return new OpenAI({
-      apiKey,
+      // Use a placeholder for local OpenAI-compatible servers (e.g., Ollama)
+      apiKey: apiKey || 'ollama',
       baseURL: baseUrl,
       timeout,
       maxRetries,
@@ -50,9 +51,22 @@ export class DefaultOpenAICompatibleProvider
     request: OpenAI.Chat.ChatCompletionCreateParams,
     _userPromptId: string,
   ): OpenAI.Chat.ChatCompletionCreateParams {
-    // Default provider doesn't need special enhancements, just pass through all parameters
+    // If targeting an Ollama OpenAI-compatible server, strip tools since many
+    // Ollama models (e.g., qwen:0.5b) don't support tool/function calling.
+    const baseUrl = this.contentGeneratorConfig.baseUrl || '';
+    const isOllama =
+      !!process.env['OLLAMA_HOST'] || baseUrl.includes('localhost:11434');
+
+    if (isOllama) {
+      const { tools: _omitTools, ...rest } = request as {
+        tools?: unknown;
+      } & OpenAI.Chat.ChatCompletionCreateParams;
+      return { ...rest };
+    }
+
+    // Default provider otherwise passes through all parameters
     return {
-      ...request, // Preserve all original parameters including sampling params
+      ...request,
     };
   }
 }
