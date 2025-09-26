@@ -49,6 +49,7 @@ export enum AuthType {
   CLOUD_SHELL = 'cloud-shell',
   USE_OPENAI = 'openai',
   QWEN_OAUTH = 'qwen-oauth',
+  USE_OLLAMA = 'ollama',
 }
 
 export type ContentGeneratorConfig = {
@@ -90,6 +91,10 @@ export function createContentGeneratorConfig(
   const openaiApiKey = process.env['OPENAI_API_KEY'] || undefined;
   const openaiBaseUrl = process.env['OPENAI_BASE_URL'] || undefined;
   const openaiModel = process.env['OPENAI_MODEL'] || undefined;
+
+  // ollama auth
+  const ollamaHost = process.env['OLLAMA_HOST'] || undefined;
+  const ollamaModel = process.env['OLLAMA_MODEL'] || undefined;
 
   // Use runtime model from config if available; otherwise, fall back to parameter or default
   const effectiveModel = config.getModel() || DEFAULT_GEMINI_MODEL;
@@ -146,6 +151,13 @@ export function createContentGeneratorConfig(
     // Prefer to use qwen3-coder-plus as the default Qwen model if QWEN_MODEL is not set.
     contentGeneratorConfig.model =
       process.env['QWEN_MODEL'] || DEFAULT_QWEN_MODEL;
+
+    return contentGeneratorConfig;
+  }
+
+  if (authType === AuthType.USE_OLLAMA && ollamaHost) {
+    contentGeneratorConfig.baseUrl = ollamaHost;
+    contentGeneratorConfig.model = ollamaModel || 'llama3.2:1b';
 
     return contentGeneratorConfig;
   }
@@ -237,6 +249,15 @@ export async function createContentGenerator(
         `Failed to initialize Qwen: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  if (config.authType === AuthType.USE_OLLAMA) {
+    // Import OllamaContentGenerator dynamically
+    const { OllamaContentGenerator } = await import(
+      '../ollama/ollamaContentGenerator.js'
+    );
+
+    return new OllamaContentGenerator(config, gcConfig);
   }
 
   throw new Error(
