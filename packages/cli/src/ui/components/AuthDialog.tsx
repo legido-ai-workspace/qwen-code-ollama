@@ -50,6 +50,7 @@ export function AuthDialog({
   const items = [
     { label: 'Qwen OAuth', value: AuthType.QWEN_OAUTH },
     { label: 'OpenAI', value: AuthType.USE_OPENAI },
+    { label: 'Ollama', value: AuthType.USE_OLLAMA },
   ];
 
   const initialAuthIndex = Math.max(

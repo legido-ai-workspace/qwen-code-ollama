@@ -26,6 +26,15 @@ function getAvailableModelsForAuthType(authType: AuthType): AvailableModel[] {
       const openAIModel = getOpenAIAvailableModelFromEnv();
       return openAIModel ? [openAIModel] : [];
     }
+    case AuthType.USE_OLLAMA: {
+      const ollamaModel = process.env['OLLAMA_MODEL'] || 'llama3.2:1b';
+      return [
+        {
+          id: ollamaModel,
+          label: ollamaModel,
+        },
+      ];
+    }
     default:
       // For other auth types, return empty array for now
       // This can be expanded later according to the design doc
