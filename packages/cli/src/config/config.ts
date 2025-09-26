@@ -39,6 +39,7 @@ import { getCliVersion } from '../utils/version.js';
 import type { Extension } from './extension.js';
 import { annotateActiveExtensions } from './extension.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
+import { AuthType } from '@qwen-code/qwen-code-core';
 
 import { isWorkspaceTrusted } from './trustedFolders.js';
 
@@ -553,6 +554,17 @@ export async function loadCliConfig(
   const sandboxConfig = await loadSandboxConfig(settings, argv);
   const cliVersion = await getCliVersion();
 
+  // Determine auth type with ENV precedence over settings.json
+  const envAuthType = (() => {
+    if (process.env['GOOGLE_GENAI_USE_GCA'] === 'true') return AuthType.LOGIN_WITH_GOOGLE;
+    if (process.env['GOOGLE_GENAI_USE_VERTEXAI'] === 'true') return AuthType.USE_VERTEX_AI;
+    if (process.env['GEMINI_API_KEY']) return AuthType.USE_GEMINI;
+    if (process.env['OLLAMA_HOST']) return AuthType.USE_OPENAI;
+    if (process.env['OPENAI_BASE_URL']) return AuthType.USE_OPENAI;
+    if (process.env['OPENAI_API_KEY']) return AuthType.USE_OPENAI;
+    return undefined;
+  })();
+
   const screenReader =
     argv.screenReader !== undefined
       ? argv.screenReader
@@ -623,7 +635,13 @@ export async function loadCliConfig(
     cwd,
     fileDiscoveryService: fileService,
     bugCommand: settings.advanced?.bugCommand,
-    model: argv.model || settings.model?.name || DEFAULT_GEMINI_MODEL,
+    // ENV model precedence (OPENAI_MODEL or OLLAMA_MODE), then CLI arg, then settings, then default
+    model:
+      process.env['OPENAI_MODEL'] ||
+      process.env['OLLAMA_MODE'] ||
+      argv.model ||
+      settings.model?.name ||
+      DEFAULT_GEMINI_MODEL,
     extensionContextFilePaths,
     sessionTokenLimit: settings.sessionTokenLimit ?? -1,
     maxSessionTurns: settings.model?.maxSessionTurns ?? -1,
@@ -647,7 +665,8 @@ export async function loadCliConfig(
           'SYSTEM_TEMPLATE:{"name":"qwen3_coder","params":{"is_git_repository":{RUNTIME_VARS_IS_GIT_REPO},"sandbox":"{RUNTIME_VARS_SANDBOX}"}}',
       },
     ]) as ConfigParameters['systemPromptMappings'],
-    authType: settings.security?.auth?.selectedType,
+    // Prefer ENV-detected auth type if present; fall back to settings
+    authType: envAuthType || settings.security?.auth?.selectedType,
     contentGenerator: settings.contentGenerator,
     cliVersion,
     tavilyApiKey:

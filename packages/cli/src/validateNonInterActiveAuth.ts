@@ -18,6 +18,15 @@ function getAuthTypeFromEnv(): AuthType | undefined {
   if (process.env['GEMINI_API_KEY']) {
     return AuthType.USE_GEMINI;
   }
+  // Allow OpenAI-compatible backends without requiring OPENAI_API_KEY when Ollama is configured
+  // If OLLAMA_HOST is set, prefer USE_OPENAI path which is OpenAI-compatible in the core
+  if (process.env['OLLAMA_HOST']) {
+    return AuthType.USE_OPENAI;
+  }
+  // If a custom OpenAI-compatible base URL is provided, use OpenAI path
+  if (process.env['OPENAI_BASE_URL']) {
+    return AuthType.USE_OPENAI;
+  }
   if (process.env['OPENAI_API_KEY']) {
     return AuthType.USE_OPENAI;
   }
@@ -29,10 +38,12 @@ function getAuthTypeFromEnv(): AuthType | undefined {
 
 export async function validateNonInteractiveAuth(
   configuredAuthType: AuthType | undefined,
-  useExternalAuth: boolean | undefined,
+  useExternalAuth: boolean | undefined, 
   nonInteractiveConfig: Config,
 ) {
-  const effectiveAuthType = configuredAuthType || getAuthTypeFromEnv();
+  // Prefer environment-driven auth if present; fall back to configured
+  const envAuthType = getAuthTypeFromEnv();
+  const effectiveAuthType = envAuthType || configuredAuthType;
 
   if (!effectiveAuthType) {
     console.error(
